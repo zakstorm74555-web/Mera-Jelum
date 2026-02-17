@@ -3,20 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>میرا جہلم - پروفائل</title>
+    <title>میرا جہلم - انتظامیہ</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         :root { --primary: #004D40; --accent: #D4AF37; }
         body { margin: 0; background: #f0f2f5; font-family: 'Segoe UI'; padding-bottom: 80px; }
-        .profile-header { background: var(--primary); color: white; padding: 40px 20px; text-align: center; border-radius: 0 0 40px 40px; }
-        .user-img { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--accent); margin-bottom: 10px; }
-        .form-card { background: white; margin: -30px 20px 20px 20px; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h3 { color: var(--primary); margin-top: 0; }
-        .input-group { margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        .btn-save { background: var(--accent); color: var(--primary); border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
-        .btn-save:hover { background: #b8962d; }
+        .profile-header { background: var(--primary); color: white; padding: 30px 20px; text-align: center; border-radius: 0 0 30px 30px; }
+        .user-img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); margin-bottom: 5px; }
+        
+        /* Tab System Styling */
+        .tabs { display: flex; background: white; margin: -20px 20px 20px 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: bold; cursor: pointer; color: #666; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent); color: var(--primary); }
+        
+        .form-section { display: none; padding: 0 20px; }
+        .form-section.active { display: block; }
+
+        .form-card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h3 { color: var(--primary); margin-top: 0; font-size: 1.2rem; }
+        .input-group { margin-bottom: 12px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: inherit; }
+        .btn-publish { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         .nav-item { text-decoration: none; color: #666; font-size: 14px; text-align: center; }
     </style>
@@ -25,26 +34,51 @@
 
     <div class="profile-header">
         <img id="display-photo" src="https://via.placeholder.com/100" class="user-img">
-        <h2 id="display-name">صارف کا نام</h2>
+        <h2 id="display-name" style="margin: 5px 0;">لوڈ ہو رہا ہے...</h2>
     </div>
 
-    <div class="form-card">
-        <h3>اپنی دکان شامل کریں 🏪</h3>
-        <div class="input-group">
-            <input type="text" id="shop-name" placeholder="دکان کا نام (مثلاً: جہلم فوڈز)">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'rate-list-sec')">ریٹ لسٹ اپلوڈ</button>
+        <button class="tab-btn" onclick="openTab(event, 'shop-reg-sec')">دکان رجسٹریشن</button>
+    </div>
+
+    <div id="rate-list-sec" class="form-section active">
+        <div class="form-card">
+            <h3>تازہ ریٹ لسٹ لگائیں 📝</h3>
+            <div class="input-group">
+                <input type="text" id="item-name" placeholder="پروڈکٹ کا نام (مثلاً: آلو، چکن)">
+            </div>
+            <div class="input-group">
+                <input type="number" id="item-price" placeholder="قیمت (Rs.)">
+            </div>
+            <div class="input-group">
+                <label style="font-size: 13px; color: grey;">پروڈکٹ کی تصویر:</label>
+                <input type="file" id="item-image" accept="image/*" style="border: none;">
+            </div>
+            <button id="publish-rate-btn" onclick="publishRate()" class="btn-publish" style="background: #2e7d32;">لائیو پبلش کریں 🚀</button>
         </div>
-        <div class="input-group">
-            <input type="text" id="map-link" placeholder="گوگل میپ لنک">
+    </div>
+
+    <div id="shop-reg-sec" class="form-section">
+        <div class="form-card">
+            <h3>اپنی دکان شامل کریں 🏪</h3>
+            <div class="input-group">
+                <input type="text" id="shop-name" placeholder="دکان کا نام">
+            </div>
+            <div class="input-group">
+                <input type="text" id="map-link" placeholder="گوگل میپ لنک">
+            </div>
+            <div class="input-group">
+                <label style="font-size: 13px; color: grey;">دکان کی تصویر:</label>
+                <input type="file" id="shop-image" accept="image/*" style="border: none;">
+            </div>
+            <button id="save-shop-btn" onclick="saveShopData()" class="btn-publish">دکان محفوظ کریں</button>
         </div>
-        <div class="input-group">
-            <label style="font-size: 13px; color: grey;">دکان کی تصویر منتخب کریں:</label>
-            <input type="file" id="shop-image" accept="image/*" style="border: none;">
-        </div>
-        <button id="save-btn" onclick="saveShopData()" class="btn-save">معلومات محفوظ کریں</button>
     </div>
 
     <nav class="bottom-nav">
         <a href="home.html" class="nav-item">🏠<br>ہوم</a>
+        <a href="ratelist.html" class="nav-item">📋<br>ریٹ لسٹ</a>
         <a href="shops.html" class="nav-item">🛒<br>دکانیں</a>
         <a href="profile.html" class="nav-item active" style="color: var(--primary); font-weight: bold;">👤<br>پروفائل</a>
     </nav>
@@ -52,65 +86,95 @@
     <script>
         // --- CONFIGURATIONS ---
         const firebaseConfig = {
-  apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
-  authDomain: "mera-jehlum.firebaseapp.com",
-  databaseURL: "https://mera-jehlum-default-rtdb.firebaseio.com",
-  projectId: "mera-jehlum",
-  storageBucket: "mera-jehlum.firebasestorage.app",
-  messagingSenderId: "1093409222171",
-  appId: "1:1093409222171:web:e9c1d2113c6bb7ae2952be",
-  measurementId: "G-VLPHNJKZ8P"
-};
+            apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
+            authDomain: "mera-jehlum.firebaseapp.com",
+            databaseURL: "https://mera-jehlum-default-rtdb.firebaseio.com",
+            projectId: "mera-jehlum",
+            storageBucket: "mera-jehlum.firebasestorage.app",
+            messagingSenderId: "1093409222171",
+            appId: "1:1093409222171:web:e9c1d2113c6bb7ae2952be"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dxhiopwak/image/upload";
         const CLOUDINARY_PRESET = "meranjehlum";
 
-        // Load User Info from LocalStorage
+        // Tab Switch Logic
+        function openTab(evt, sectionName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("form-section");
+            for (i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
+            document.getElementById(sectionName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Profile Loading
         document.getElementById('display-name').innerText = localStorage.getItem("user_name") || "صارف";
         document.getElementById('display-photo').src = localStorage.getItem("user_photo") || "https://via.placeholder.com/100";
 
+        // Logic to upload to Cloudinary
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_PRESET);
+            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+            const json = await res.json();
+            return json.secure_url;
+        }
+
+        // 1. Publish Rate Logic
+        async function publishRate() {
+            const btn = document.getElementById('publish-rate-btn');
+            const name = document.getElementById('item-name').value;
+            const price = document.getElementById('item-price').value;
+            const file = document.getElementById('item-image').files[0];
+
+            if(!name || !price || !file) return alert("براہ کرم ریٹ کی تمام معلومات پُر کریں!");
+
+            btn.innerText = "پبلش ہو رہا ہے...";
+            btn.disabled = true;
+
+            try {
+                const imgUrl = await uploadImage(file);
+                await db.ref('mandi_rates').push({
+                    name_ur: name,
+                    price: price,
+                    image_url: imgUrl,
+                    time: new Date().toLocaleTimeString()
+                });
+                alert("ریٹ لسٹ لائیو کر دی گئی ہے!");
+                window.location.href = "ratelist.html";
+            } catch (err) { alert("Error!"); console.error(err); }
+            finally { btn.innerText = "لائیو پبلش کریں 🚀"; btn.disabled = false; }
+        }
+
+        // 2. Save Shop Logic (Existing)
         async function saveShopData() {
-            const btn = document.getElementById('save-btn');
+            const btn = document.getElementById('save-shop-btn');
             const shopName = document.getElementById('shop-name').value;
             const mapLink = document.getElementById('map-link').value;
             const file = document.getElementById('shop-image').files[0];
 
-            if(!shopName || !file) return alert("براہ کرم تمام معلومات فراہم کریں!");
+            if(!shopName || !file) return alert("دکان کی معلومات مکمل کریں!");
 
-            btn.innerText = "اپلوڈنگ جاری ہے...";
+            btn.innerText = "سیو ہو رہا ہے...";
             btn.disabled = true;
 
             try {
-                // 1. Upload Image to Cloudinary
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('upload_preset', CLOUDINARY_PRESET);
-
-                const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
-                const json = await res.json();
-                const imageUrl = json.secure_url;
-
-                // 2. Save Data to Firebase Realtime Database
+                const imgUrl = await uploadImage(file);
                 await db.ref('shops').push({
                     shop_name: shopName,
                     map_link: mapLink,
-                    image_url: imageUrl,
-                    owner: localStorage.getItem("user_name"),
+                    image_url: imgUrl,
                     rating: 5.0
                 });
-
-                alert("مبارک ہو! آپ کی دکان رجسٹر ہو گئی ہے۔");
+                alert("دکان رجسٹر ہو گئی!");
                 window.location.href = "shops.html";
-
-            } catch (err) {
-                alert("کچھ غلط ہو گیا۔ دوبارہ کوشش کریں!");
-                console.error(err);
-            } finally {
-                btn.innerText = "معلومات محفوظ کریں";
-                btn.disabled = false;
-            }
+            } catch (err) { alert("Error!"); }
+            finally { btn.innerText = "دکان محفوظ کریں"; btn.disabled = false; }
         }
     </script>
 </body>

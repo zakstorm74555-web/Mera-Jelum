@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#004D40">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="میرا جہلم">
-<link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#004D40">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="میرا جہلم">
+    <link rel="apple-touch-icon" href="icon.png">
     <title>میرا جہلم - لاگ ان</title>
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -19,7 +18,11 @@
     <style>
         :root { --primary: #004D40; --accent: #D4AF37; --gold-light: #FFD700; }
         body { margin: 0; font-family: 'Segoe UI', Arial; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .login-card { text-align: center; padding: 40px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 30px; border: 1px solid var(--accent); width: 85%; max-width: 400px; }
+        
+        /* Loading Screen Style */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        
+        .login-card { display: none; text-align: center; padding: 40px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 30px; border: 1px solid var(--accent); width: 85%; max-width: 400px; }
         .logo { width: 120px; margin-bottom: 20px; animation: glow 2s infinite alternate; }
         @keyframes glow { from { filter: drop-shadow(0 0 5px var(--accent)); } to { filter: drop-shadow(0 0 20px var(--accent)); } }
         h1 { font-size: 2.5rem; margin: 0; color: var(--accent); }
@@ -28,7 +31,15 @@
     </style>
 </head>
 <body>
-    <div class="login-card">
+
+    <div id="loader">
+        <div style="text-align: center;">
+            <img src="icon.png" width="80" class="logo">
+            <p>چیک کیا جا رہا ہے...</p>
+        </div>
+    </div>
+
+    <div class="login-card" id="loginCard">
         <img src="icon.png" class="logo" alt="Mera Jhelum Logo">
         <h1>میرا جہلم</h1>
         <p>جہلم کی پہلی سمارٹ رمضان گائیڈ</p>
@@ -39,27 +50,38 @@
     </div>
 
     <script>
-        // --- FIREBASE CONFIGURATION (PASTE HERE) ---
-      const firebaseConfig = {
-  apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
-  authDomain: "mera-jehlum.firebaseapp.com",
-  databaseURL: "https://mera-jehlum-default-rtdb.firebaseio.com",
-  projectId: "mera-jehlum",
-  storageBucket: "mera-jehlum.firebasestorage.app",
-  messagingSenderId: "1093409222171",
-  appId: "1:1093409222171:web:e9c1d2113c6bb7ae2952be",
-  measurementId: "G-VLPHNJKZ8P"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
+            authDomain: "mera-jehlum.firebaseapp.com",
+            databaseURL: "https://mera-jehlum-default-rtdb.firebaseio.com",
+            projectId: "mera-jehlum",
+            storageBucket: "mera-jehlum.firebasestorage.app",
+            messagingSenderId: "1093409222171",
+            appId: "1:1093409222171:web:e9c1d2113c6bb7ae2952be",
+            measurementId: "G-VLPHNJKZ8P"
+        };
         firebase.initializeApp(firebaseConfig);
+
+        // --- CHECK IF USER IS ALREADY LOGGED IN ---
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                // User login hai! Data update karo aur home pe bhejo
+                localStorage.setItem("user_name", user.displayName);
+                localStorage.setItem("user_photo", user.photoURL);
+                window.location.href = "home.html";
+            } else {
+                // User login nahi hai, login card dikhao
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('loginCard').style.display = 'block';
+            }
+        });
 
         function signInWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then((result) => {
-                // User login ho gaya, ab profile photo Cloudinary pe save karne ka logic
-                localStorage.setItem("user_name", result.user.displayName);
-                localStorage.setItem("user_photo", result.user.photoURL);
-                window.location.href = "home.html";
-            }).catch((error) => alert(error.message));
+            // Standalone mode (App mode) mein Popup ki jagah Redirect behtar kaam karta hai
+            firebase.auth().signInWithPopup(provider).catch((error) => {
+                alert("لاگ ان میں مسئلہ: " + error.message);
+            });
         }
     </script>
 </body>

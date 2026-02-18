@@ -35,8 +35,8 @@
     <div class="prayer-timer">
         <h3 id="clock">00:00:00</h3>
         <div style="display: flex; justify-content: space-around;">
-            <div><small>سحر</small><br><b id="s-time">05:02 AM</b></div>
-            <div><small>افطار</small><br><b id="i-time">06:15 PM</b></div>
+            <div><small>سحر</small><br><b id="s-time">04:30 AM</b></div>
+            <div><small>افطار</small><br><b id="i-time">05:56  PM</b></div>
         </div>
     </div>
 
@@ -69,18 +69,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Mandi Rates Sync
-        db.ref('mandi_rates').on('value', (snapshot) => {
-            const list = document.getElementById('mandi-list');
-            list.innerHTML = "";
-            snapshot.forEach((child) => {
-                list.innerHTML += `
-                    <div class="mandi-card">
-                        <div><b>${child.val().name_ur}</b><br><small>فی کلو</small></div>
-                        <div class="price">Rs. ${child.val().price}</div>
-                    </div>`;
-            });
-        });
+      
 
         // Time & Audio Logic
         function updateClock() {

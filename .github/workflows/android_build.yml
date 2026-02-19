@@ -19,26 +19,12 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
           npm install
-
-      - name: Initialize Capacitor
-        run: |
-          # Agar pehle se initialized nahi hai toh karein
-          if [ ! -f "capacitor.config.ts" ] && [ ! -f "capacitor.config.json" ]; then
-            npx cap init "Mera Jhelum" "com.merajhelum.app" --web-dir .
-          fi
-          npx cap add android
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+          npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Build Android Project
         run: |
-          # Android folder ke andar ja kar gradlew ko run karna
+          npx cap sycn android || npx cap add android
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug

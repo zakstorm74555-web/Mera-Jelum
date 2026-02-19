@@ -1,7 +1,6 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// Firebase Config (Wahi purani wali)
 const firebaseConfig = {
     apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
     authDomain: "mera-jehlum.firebaseapp.com",
@@ -13,28 +12,50 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Background Message Handler
-// Jab website band hogi, ye code notification dikhaye ga
 messaging.onBackgroundMessage((payload) => {
     console.log('[sw.js] Background message received ', payload);
     
-    const notificationTitle = payload.notification.title;
+    const title = payload.notification.title;
+    let soundFile = 'azaan.mp3'; // Default sab ke liye
+
+    // Logic for specific sounds
+    if (title.includes("سحری")) {
+        soundFile = 'sehri.mp3';
+    } else if (title.includes("افطاری")) {
+        soundFile = 'aftari.mp3';
+    }
+
     const notificationOptions = {
         body: payload.notification.body,
-        icon: 'icon.png', // Aapka favicon/logo
+        icon: 'icon.png',
         badge: 'icon.png',
-        vibrate: [200, 100, 200], // Mobile vibration pattern
-        tag: 'namaz-alert', // Ek hi notification baar baar aaye to replace ho jaye
-        renotify: true
+        tag: 'namaz-alert',
+        renotify: true,
+        // Browser/Android settings agar allow karein to ye sound trigger hogi
+        sound: soundFile, 
+        vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170],
+        data: {
+            url: '/home.html?autoPlay=true' // Click karne par full azaan ke liye hint
+        }
     };
 
-    return self.registration.showNotification(notificationTitle, notificationOptions);
+    return self.registration.showNotification(title, notificationOptions);
 });
 
-// Notification par click karne se website khul jaye
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow('/') // Click karne par home page khulega
+        clients.matchAll({type: 'window'}).then(windowClients => {
+            // Agar app pehle se khuli hai to focus karein, warna naye tab mein kholien
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url === '/' && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow('/home.html?playNow=true');
+            }
+        })
     );
 });

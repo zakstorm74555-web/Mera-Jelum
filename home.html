@@ -4,44 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#004D40">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="میرا جہلم">
-<link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#004D40">
     <title>میرا جہلم - ہوم</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         :root { --primary: #004D40; --accent: #D4AF37; }
-        body { margin: 0; background: #f0f2f5; font-family: 'Segoe UI'; padding-bottom: 80px; }
-        .header { background: var(--primary); color: var(--accent); padding: 20px; text-align: center; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .mandi-card { background: white; margin: 15px; border-radius: 20px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 5px solid var(--accent); }
-        .price { font-size: 1.5rem; font-weight: bold; color: green; }
-        .prayer-timer { background: white; margin: 15px; border-radius: 20px; padding: 20px; text-align: center; border: 2px solid var(--accent); }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        body { margin: 0; background: #f0f2f5; font-family: 'Segoe UI'; padding-bottom: 100px; overflow-x: hidden; }
+        
+        /* Header & Ribbon Style */
+        .header { background: var(--primary); color: white; padding: 25px 20px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .ribbon { position: absolute; top: 10px; right: -35px; background: #2e7d32; color: white; padding: 5px 40px; transform: rotate(45deg); font-size: 12px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 1px solid var(--accent); }
+        
+        /* Tasbih Counter Style */
+        .tasbih-container { background: white; margin: 15px; border-radius: 25px; padding: 20px; text-align: center; border-bottom: 5px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .counter-display { font-size: 4rem; font-weight: bold; color: var(--primary); margin: 10px 0; font-family: 'Courier New', Courier, monospace; }
+        .btn-tap { background: var(--primary); color: white; border: none; padding: 20px 60px; border-radius: 50px; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,77,64,0.3); }
+        .btn-tap:active { transform: scale(0.95); }
+        .btn-reset { background: #e57373; color: white; border: none; padding: 8px 20px; border-radius: 10px; margin-top: 15px; cursor: pointer; }
+
+        .prayer-timer { background: white; margin: 15px; border-radius: 20px; padding: 20px; text-align: center; border: 2px solid var(--accent); position: relative; overflow: hidden; }
+        .ramadan-bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.1; z-index: 0; pointer-events: none; }
+        .timer-content { position: relative; z-index: 1; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
         .nav-item { text-decoration: none; color: #666; font-size: 14px; text-align: center; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <img src="icon.png" width="40" style="vertical-align: middle;">
-        <span style="font-size: 24px; font-weight: bold; margin-right: 10px;">رمضان مبارک</span>
+        <div class="ribbon">رمضان مبارک</div>
+        <img src="icon.png" width="35" style="vertical-align: middle; margin-left: 10px;">
+        <span style="font-size: 24px; font-weight: bold;">میرا جہلم</span>
     </div>
 
     <div class="prayer-timer">
-        <h3 id="clock">00:00:00</h3>
-        <div style="display: flex; justify-content: space-around;">
-            <div><small>سحر</small><br><b id="s-time">04:30 AM</b></div>
-            <div><small>افطار</small><br><b id="i-time">05:56  PM</b></div>
+        <img src="https://www.transparentpng.com/download/ramadan/ramadan-hanging-lamps-png-7.png" class="ramadan-bg-img">
+        <div class="timer-content">
+            <h2 id="clock" style="margin: 0; color: var(--primary);">00:00:00</h2>
+            <div style="display: flex; justify-content: space-around; margin-top: 15px;">
+                <div><small>سحر (ختم)</small><br><b id="s-time" style="color: #d32f2f;">05:23 AM</b></div>
+                <div><small>افطار (شروع)</small><br><b id="i-time" style="color: #2e7d32;">06:00 PM</b></div>
+            </div>
         </div>
     </div>
 
-    <div id="mandi-list">
-        </div>
+    <div class="tasbih-container">
+        <div style="color: #666; font-size: 14px;">تسبیح کاؤنٹر</div>
+        <div id="counter" class="counter-display">0</div>
+        <button class="btn-tap" onclick="countUp()">ٹیپ کریں</button><br>
+        <button class="btn-reset" onclick="resetCount()">ری سیٹ</button>
+    </div>
+
+    <div id="mandi-list"></div>
 
     <audio id="audioAzaan" src="azaan.mp3"></audio>
     <audio id="audioSehri" src="sehri.mp3"></audio>
@@ -50,28 +67,55 @@
     <nav class="bottom-nav">
         <a href="home.html" class="nav-item active">🏠<br>ہوم</a>
         <a href="shops.html" class="nav-item">🛒<br>دکانیں</a>
-        <a href="ratelist.html" class="nav-item">🧾<br>شرح کی فہرست</a>
+        <a href="ratelist.html" class="nav-item">🧾<br>ریٹ لسٹ</a>
         <a href="profile.html" class="nav-item">👤<br>پروفائل</a>
     </nav>
 
     <script>
-        // --- FIREBASE CONFIG (SAME AS INDEX) ---
-      const firebaseConfig = {
-  apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
-  authDomain: "mera-jehlum.firebaseapp.com",
-  databaseURL: "https://mera-jehlum-default-rtdb.firebaseio.com",
-  projectId: "mera-jehlum",
-  storageBucket: "mera-jehlum.firebasestorage.app",
-  messagingSenderId: "1093409222171",
-  appId: "1:1093409222171:web:e9c1d2113c6bb7ae2952be",
-  measurementId: "G-VLPHNJKZ8P"
-};
+        // Notification Permission Logic
+        window.onload = function() {
+            if ("Notification" in window) {
+                if (Notification.permission !== "granted") {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            console.log("Notification permission granted.");
+                        }
+                    });
+                }
+            }
+        };
+
+        // Tasbih Logic
+        let count = localStorage.getItem('tasbihCount') || 0;
+        document.getElementById('counter').innerText = count;
+
+        function countUp() {
+            count++;
+            document.getElementById('counter').innerText = count;
+            localStorage.setItem('tasbihCount', count);
+            if (navigator.vibrate) navigator.vibrate(50); // Tap feel
+        }
+
+        function resetCount() {
+            if(confirm("کیا آپ کاؤنٹر ری سیٹ کرنا چاہتے ہیں؟")) {
+                count = 0;
+                document.getElementById('counter').innerText = count;
+                localStorage.setItem('tasbihCount', 0);
+            }
+        }
+
+        // Firebase & Clock Logic
+        const firebaseConfig = {
+            apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
+            authDomain: "mera-jehlum.firebaseapp.com",
+            databaseURL: "https://mera-jehlum-default-rtdb.firebaseio.com",
+            projectId: "mera-jehlum",
+            storageBucket: "mera-jehlum.firebasestorage.app",
+            messagingSenderId: "1093409222171",
+            appId: "1:1093409222171:web:e9c1d2113c6bb7ae2952be"
+        };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
-      
-
-        // Time & Audio Logic
         function updateClock() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
@@ -80,10 +124,14 @@
             const sehri = document.getElementById('s-time').innerText;
             const iftar = document.getElementById('i-time').innerText;
 
-            if (timeStr === sehri) document.getElementById('audioSehri').play();
-            if (timeStr === iftar) {
+            if (timeStr === sehri && now.getSeconds() === 0) {
+                document.getElementById('audioSehri').play();
+                new Notification("سحری کا وقت ختم ہو گیا ہے!");
+            }
+            if (timeStr === iftar && now.getSeconds() === 0) {
                 document.getElementById('audioAftari').play();
                 document.getElementById('audioAzaan').play();
+                new Notification("افطاری کا وقت ہو گیا ہے! دعا یاد رکھیں۔");
             }
         }
         setInterval(updateClock, 1000);

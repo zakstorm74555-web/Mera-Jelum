@@ -24,7 +24,10 @@ jobs:
 
       - name: Initialize Capacitor
         run: |
-          npx cap init "Mera Jhelum" "com.merajhelum.app" --web-dir .
+          # Agar pehle se initialized nahi hai toh karein
+          if [ ! -f "capacitor.config.ts" ] && [ ! -f "capacitor.config.json" ]; then
+            npx cap init "Mera Jhelum" "com.merajhelum.app" --web-dir .
+          fi
           npx cap add android
 
       - name: Set up Java
@@ -35,6 +38,7 @@ jobs:
 
       - name: Build Android Project
         run: |
+          # Android folder ke andar ja kar gradlew ko run karna
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug

@@ -11,18 +11,13 @@
         body { margin: 0; background: #f0f2f5; font-family: 'Segoe UI'; padding-bottom: 100px; }
         .header { background: var(--primary); color: white; padding: 25px 20px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .ribbon { position: absolute; top: 10px; right: -35px; background: #2e7d32; color: white; padding: 5px 40px; transform: rotate(45deg); font-size: 12px; font-weight: bold; border: 1px solid var(--accent); }
-        
-        /* Clock Section */
         .clock-section { background: white; margin: 15px; border-radius: 20px; padding: 25px; text-align: center; border: 2px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         #clock { font-size: 3rem; margin: 0; color: var(--primary); font-weight: bold; }
-        
-        /* Tasbih Counter Section */
         .tasbih-card { background: white; margin: 15px; border-radius: 25px; padding: 25px; text-align: center; border-bottom: 5px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .counter-display { font-size: 4.5rem; font-weight: bold; color: var(--primary); margin: 10px 0; font-family: monospace; }
         .btn-tap { background: var(--primary); color: white; border: none; padding: 20px 0; width: 80%; border-radius: 50px; font-size: 22px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,77,64,0.3); }
         .btn-tap:active { transform: scale(0.95); }
         .btn-reset { background: none; color: #e57373; border: none; margin-top: 15px; cursor: pointer; font-size: 14px; }
-
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 100; }
         .nav-item { text-decoration: none; color: #666; font-size: 14px; text-align: center; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
@@ -59,7 +54,6 @@
     </nav>
 
 <script>
-    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
         authDomain: "mera-jehlum.firebaseapp.com",
@@ -70,87 +64,59 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // --- AUDIO UNLOCK LOGIC ---
+    // --- 1. SERVICE WORKER REGISTRATION (Very Important) ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+            console.log('SW Registered:', registration);
+            messaging.useServiceWorker(registration);
+        });
+    }
+
     let audioUnlocked = false;
     function unlockAudio() {
         if (!audioUnlocked) {
             ['audioAzaan', 'audioSehri', 'audioAftari'].forEach(id => {
                 let a = document.getElementById(id);
-                // Silent play to trick browser security
-                a.play().then(() => { 
-                    a.pause(); 
-                    a.currentTime = 0; 
-                }).catch(e => console.log("Waiting for user tap..."));
+                a.play().then(() => { a.pause(); a.currentTime = 0; }).catch(e => console.log("Unlock needed"));
             });
             audioUnlocked = true;
-            console.log("Audio Unlocked & Ready");
         }
     }
 
-    // --- HUGGING FACE CONNECTION & TOPIC SUBSCRIPTION ---
+    // --- 2. TOKEN & HUGGING FACE SYNC ---
     messaging.getToken({ vapidKey: 'BETMouzl41jLq3vmn0tCz-ECN6iCkZ1PZQcVy68gpwahe-iPgygQFgYAr4Tp75TZeJYi35jJ79YE5feHsMM97O4' })
     .then((token) => {
         if (token) {
-            console.log("Token generated:", token);
-            // Hugging Face ko token bhejna
+            // Space hata kar sahi URL check karein (Check if it's mera-jehlum or mera_jehlum)
             fetch("https://paradoxstudio9807-mera_jehlum.hf.space/subscribe", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: token })
             })
             .then(res => res.json())
-            .then(data => console.log("HF Connected:", data))
-            .catch(err => console.error("HF Connection Failed"));
+            .then(data => console.log("Subscribed:", data))
+            .catch(err => console.error("Sub Error:", err));
         }
     });
 
-    // --- LIVE SIGNAL HANDLER ---
+    // --- 3. LIVE MESSAGE HANDLER ---
     messaging.onMessage((payload) => {
-        console.log('Live Signal:', payload);
+        console.log('Signal Received:', payload);
         const title = payload.notification.title;
+        if (title.includes("سحری")) document.getElementById('audioSehri').play();
+        else if (title.includes("افطاری")) document.getElementById('audioAftari').play();
+        else document.getElementById('audioAzaan').play();
         
-        // Agar system unlock hai to audio bajao
-        if (title.includes("سحری")) {
-            document.getElementById('audioSehri').play();
-        } else if (title.includes("افطاری")) {
-            document.getElementById('audioAftari').play();
-        } else {
-            document.getElementById('audioAzaan').play();
-        }
-        
-        // User ko alert dikhana
-        if(confirm(title + "\n" + payload.notification.body + "\n\nکیا آپ اذان بند کرنا چاہتے ہیں؟")) {
-            ['audioAzaan', 'audioSehri', 'audioAftari'].forEach(id => {
-                document.getElementById(id).pause();
-                document.getElementById(id).currentTime = 0;
-            });
-        }
+        alert(title + "\n" + payload.notification.body);
     });
 
-    // --- TASBIH LOGIC ---
+    // --- 4. TASBIH & CLOCK ---
     let count = localStorage.getItem('tasbihCount') || 0;
     document.getElementById('counter').innerText = count;
-
-    function countUp() {
-        unlockAudio(); // Tap karne par audio system bhi unlock ho jayega
-        count++;
-        document.getElementById('counter').innerText = count;
-        localStorage.setItem('tasbihCount', count);
-        if (navigator.vibrate) navigator.vibrate(40);
-    }
-
-    function resetCount() {
-        if(confirm("کیا آپ ری سیٹ کرنا چاہتے ہیں؟")) {
-            count = 0;
-            document.getElementById('counter').innerText = 0;
-            localStorage.setItem('tasbihCount', 0);
-        }
-    }
-
-    // --- CLOCK LOGIC ---
-    function updateClock() {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB');
-    }
+    function countUp() { unlockAudio(); count++; document.getElementById('counter').innerText = count; localStorage.setItem('tasbihCount', count); if (navigator.vibrate) navigator.vibrate(40); }
+    function resetCount() { if(confirm("ری سیٹ؟")) { count = 0; document.getElementById('counter').innerText = 0; localStorage.setItem('tasbihCount', 0); } }
+    function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'); }
     setInterval(updateClock, 1000);
     updateClock();
 </script>

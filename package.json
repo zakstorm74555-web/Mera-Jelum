@@ -1,0 +1,23 @@
+{
+  "name": "mera-jehlum",
+  "version": "1.0.0",
+  "description": "Jhelum City Smart Ramadan Guide",
+  "main": "home.html",
+  "scripts": {
+    "build": "echo 'Building Web App...'",
+    "sync": "npx cap sync"
+  },
+  "keywords": [
+    "ramadan",
+    "jehlum",
+    "azaan"
+  ],
+  "author": "Paradox Studio",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/local-notifications": "^5.0.0"
+  }
+}

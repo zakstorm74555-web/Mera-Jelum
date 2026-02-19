@@ -12,7 +12,7 @@
         .header { background: var(--primary); color: white; padding: 25px 20px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .ribbon { position: absolute; top: 10px; right: -35px; background: #2e7d32; color: white; padding: 5px 40px; transform: rotate(45deg); font-size: 12px; font-weight: bold; border: 1px solid var(--accent); }
         
-        /* Clock & Timer Section */
+        /* Clock Section */
         .clock-section { background: white; margin: 15px; border-radius: 20px; padding: 25px; text-align: center; border: 2px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         #clock { font-size: 3rem; margin: 0; color: var(--primary); font-weight: bold; }
         
@@ -57,7 +57,8 @@
         <a href="ratelist.html" class="nav-item">🧾<br>ریٹ لسٹ</a>
         <a href="profile.html" class="nav-item">👤<br>پروفائل</a>
     </nav>
-       <script>
+
+<script>
     // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyDey-KaC_Ty-dqijuQMWeQjtUx3eaaXc6k",
@@ -69,68 +70,89 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // --- HUGGING FACE CONNECTION LOGIC ---
-    function subscribeToHuggingFace(token) {
-        // Aapki Hugging Face Space ka URL
-        const hfSpaceUrl = "https://paradoxstudio9807-mera-jehlum.hf.space/subscribe";
-
-        fetch(hfSpaceUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token })
-        })
-        .then(response => response.json())
-        .then(data => console.log("Hugging Face Connected:", data))
-        .catch(err => console.error("HF Connection Failed:", err));
+    // --- AUDIO UNLOCK LOGIC ---
+    let audioUnlocked = false;
+    function unlockAudio() {
+        if (!audioUnlocked) {
+            ['audioAzaan', 'audioSehri', 'audioAftari'].forEach(id => {
+                let a = document.getElementById(id);
+                // Silent play to trick browser security
+                a.play().then(() => { 
+                    a.pause(); 
+                    a.currentTime = 0; 
+                }).catch(e => console.log("Waiting for user tap..."));
+            });
+            audioUnlocked = true;
+            console.log("Audio Unlocked & Ready");
+        }
     }
 
-    // Token hasil karna aur HF ko bhejna
-    messaging.getToken({ vapidKey: 'BETMouzl41jLq3vmn0tCz-ECN6iCkZ1PZQcVy68gpwahe-iPgygQFgYAr4Tp75TZeJYi35jJ79YE5feHsMM97O4' }).then((token) => {
+    // --- HUGGING FACE CONNECTION & TOPIC SUBSCRIPTION ---
+    messaging.getToken({ vapidKey: 'BETMouzl41jLq3vmn0tCz-ECN6iCkZ1PZQcVy68gpwahe-iPgygQFgYAr4Tp75TZeJYi35jJ79YE5feHsMM97O4' })
+    .then((token) => {
         if (token) {
             console.log("Token generated:", token);
-            subscribeToHuggingFace(token); // Yahan connection ho raha hai
+            // Hugging Face ko token bhejna
+            fetch("https://paradoxstudio9807-mera-jehlum.hf.space/subscribe", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token })
+            })
+            .then(res => res.json())
+            .then(data => console.log("HF Connected:", data))
+            .catch(err => console.error("HF Connection Failed"));
         }
     });
 
-    // Jab Hugging Face signal bheje to Audio bajana
+    // --- LIVE SIGNAL HANDLER ---
     messaging.onMessage((payload) => {
-        console.log('Live Signal from HF:', payload);
+        console.log('Live Signal:', payload);
         const title = payload.notification.title;
         
-        if (title.includes("فجر")) {
+        // Agar system unlock hai to audio bajao
+        if (title.includes("سحری")) {
             document.getElementById('audioSehri').play();
-        } else if (title.includes("مغرب")) {
+        } else if (title.includes("افطاری")) {
             document.getElementById('audioAftari').play();
-            document.getElementById('audioAzaan').play();
         } else {
             document.getElementById('audioAzaan').play();
+        }
+        
+        // User ko alert dikhana
+        if(confirm(title + "\n" + payload.notification.body + "\n\nکیا آپ اذان بند کرنا چاہتے ہیں؟")) {
+            ['audioAzaan', 'audioSehri', 'audioAftari'].forEach(id => {
+                document.getElementById(id).pause();
+                document.getElementById(id).currentTime = 0;
+            });
         }
     });
 
     // --- TASBIH LOGIC ---
-        let count = localStorage.getItem('tasbihCount') || 0;
+    let count = localStorage.getItem('tasbihCount') || 0;
+    document.getElementById('counter').innerText = count;
+
+    function countUp() {
+        unlockAudio(); // Tap karne par audio system bhi unlock ho jayega
+        count++;
         document.getElementById('counter').innerText = count;
+        localStorage.setItem('tasbihCount', count);
+        if (navigator.vibrate) navigator.vibrate(40);
+    }
 
-        function countUp() {
-            count++;
-            document.getElementById('counter').innerText = count;
-            localStorage.setItem('tasbihCount', count);
-            if (navigator.vibrate) navigator.vibrate(40);
+    function resetCount() {
+        if(confirm("کیا آپ ری سیٹ کرنا چاہتے ہیں؟")) {
+            count = 0;
+            document.getElementById('counter').innerText = 0;
+            localStorage.setItem('tasbihCount', 0);
         }
+    }
 
-        function resetCount() {
-            if(confirm("کیا آپ ری سیٹ کرنا چاہتے ہیں؟")) {
-                count = 0;
-                document.getElementById('counter').innerText = 0;
-                localStorage.setItem('tasbihCount', 0);
-            }
-        }
-
-        // --- CLOCK LOGIC ---
-        function updateClock() {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB');
-        }
-        setInterval(updateClock, 1000);
+    // --- CLOCK LOGIC ---
+    function updateClock() {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 </script>
 </body>
 </html>

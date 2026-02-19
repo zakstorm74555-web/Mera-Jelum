@@ -1,0 +1,8 @@
+{
+  "appId": "com.merajhelum.app",
+  "appName": "Mera Jhelum",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  }
+}

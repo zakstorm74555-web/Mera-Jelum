@@ -107,8 +107,30 @@
         }
     });
 
-    // --- TASBIH & CLOCK LOGIC (SAME AS BEFORE) ---
-    // ... (baaki purana counter aur clock ka code yahan aayega)
+    // --- TASBIH LOGIC ---
+        let count = localStorage.getItem('tasbihCount') || 0;
+        document.getElementById('counter').innerText = count;
+
+        function countUp() {
+            count++;
+            document.getElementById('counter').innerText = count;
+            localStorage.setItem('tasbihCount', count);
+            if (navigator.vibrate) navigator.vibrate(40);
+        }
+
+        function resetCount() {
+            if(confirm("کیا آپ ری سیٹ کرنا چاہتے ہیں؟")) {
+                count = 0;
+                document.getElementById('counter').innerText = 0;
+                localStorage.setItem('tasbihCount', 0);
+            }
+        }
+
+        // --- CLOCK LOGIC ---
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB');
+        }
+        setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
